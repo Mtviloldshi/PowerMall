@@ -21,6 +21,8 @@ public interface UmsAdminService {
     List<UmsAdmin> list();
 
     UserDetails loadUserByUsername(String username);
+
+    UmsAdmin getAdminByUsername(String username);
     /**
      * 获取缓存服务
      */

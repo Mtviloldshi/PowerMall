@@ -3,6 +3,7 @@ package com.power.mall.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.power.mall.bo.AdminUserDetails;
+import com.power.mall.common.exception.Asserts;
 import com.power.mall.dto.UserLoginDTO;
 import com.power.mall.dto.UserRegisterDTO;
 import com.power.mall.mapper.UserAdminMapper;
@@ -12,10 +13,17 @@ import com.power.mall.service.UmsAdminCacheService;
 import com.power.mall.service.UmsAdminService;
 import com.power.mall.security.util.JwtTokenUtil;
 import com.power.mall.model.UmsExample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,13 +35,15 @@ import java.util.List;
  */
 @Service
 public class UmsAdminImpl implements UmsAdminService {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(UmsAdminImpl.class);
     @Autowired
     private UserAdminMapper userAdminMapper;
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private UmsAdminCacheService umsAdminCacheService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Boolean register(UserRegisterDTO dto) {
@@ -51,25 +61,25 @@ public class UmsAdminImpl implements UmsAdminService {
     @Override
     public String login(UserLoginDTO loginDTO) {
         String token = null;
-        if (loginDTO.getPassword().isEmpty() || loginDTO.getUsername().isEmpty()) {
-            return "用户名或密码不能为空";
-        }
-        UmsExample umsExample = new UmsExample();
-        umsExample.createCriteria().andUsernameEqualTo(loginDTO.getUsername());
-        List<UmsAdmin> umsAdmin = userAdminMapper.selectByExample(umsExample);
-        //用户名不能为空吗，且用户名不能重复出现
-        if (umsAdmin == null || umsAdmin.isEmpty()) {
-            return "用户名不存在";
-        } else if (umsAdmin.size()>1){
-            return "有多个相同用户名存在，请联系管理员";
-        } else if (umsAdmin.get(0).getPassword().equals(loginDTO.getPassword())){
-            token = jwtTokenUtil.generateToken(umsAdmin.get(0));
+        try {
+            //用户名不能为空吗，且用户名不能重复出现
+            UserDetails userDetails = loadUserByUsername(loginDTO.getUsername());
+            LOGGER.info(passwordEncoder.encode(loginDTO.getPassword()));
+            String password = userDetails.getPassword();
+            if (!passwordEncoder.matches(loginDTO.getPassword(),password)) {
+                Asserts.fail("密码不正确");
+            }
+            if (!userDetails.isEnabled()){
+                Asserts.fail("账号已被禁用");
+            }
+            UsernamePasswordAuthenticationToken authenticationToken =  new UsernamePasswordAuthenticationToken(userDetails,null,null);
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            token = jwtTokenUtil.generateToken(userDetails);
             //将登录人信息缓存到redis中
             getAdminByUsername(loginDTO.getUsername());
-        }else{
-            return "密码错误登录失败";
+        } catch (AuthenticationException e) {
+            LOGGER.warn("登录异常：{}",e.getMessage());
         }
-
         return token;
     }
 
@@ -100,7 +110,7 @@ public class UmsAdminImpl implements UmsAdminService {
         return null;
     }
     //准确来说是从缓存中获取用户信息，并且同时有存储的逻辑
-    private UmsAdmin getAdminByUsername(String username) {
+    public UmsAdmin getAdminByUsername(String username) {
         //在存储前，先从redis中查找是否已经存在
         UmsAdmin admin = umsAdminCacheService.getAdmin(username);
         if (admin != null){

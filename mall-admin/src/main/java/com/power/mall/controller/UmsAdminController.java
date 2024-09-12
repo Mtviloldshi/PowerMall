@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.plaf.SpinnerUI;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ public class UmsAdminController {
     private UmsAdminService userAdminService;
 
 
+
     @PostMapping("/register")
     //@Validated 验证参数 NotEmpty?
     public CommonResult<Boolean> register(@RequestBody UserRegisterDTO registerDTO){
@@ -36,7 +39,7 @@ public class UmsAdminController {
 
     @Value("${jwt.tokenHead}")
     private String tokenHead;
-
+ 
     @PostMapping("/login")
     public CommonResult login(@RequestBody UserLoginDTO loginDTO){
         String token = userAdminService.login(loginDTO);
@@ -52,6 +55,20 @@ public class UmsAdminController {
     public CommonResult list(){
         List<UmsAdmin> list =userAdminService.list();
         return CommonResult.success(list);
+    }
+    @GetMapping("info")
+    public CommonResult info(Principal principal){
+        if (principal == null){
+            CommonResult.unauthorized(null);
+        }
+        String username = principal.getName();
+        UmsAdmin umsAdmin = userAdminService.getAdminByUsername(username);
+        Map<String,Object> data = new HashMap<>();
+        data.put("username",umsAdmin.getUsername());
+        data.put("menu",null);
+        data.put("icon",umsAdmin.getIcon());
+        data.put("roles",null);
+        return CommonResult.success(data);
     }
 
 }

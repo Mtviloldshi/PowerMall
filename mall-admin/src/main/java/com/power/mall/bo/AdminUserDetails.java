@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @Name 未命名
+ * @Name 对管理用户信息进行二次封装
  * @Author SCH
  * @Date 2024/9/11 17:10
  */
@@ -36,31 +36,31 @@ public class AdminUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return "";
+        return umsAdmin.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return "";
+        return umsAdmin.getUsername();
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return false;
+        return umsAdmin.getStatus().equals(1);
     }
 }
