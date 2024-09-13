@@ -1,10 +1,14 @@
 package com.power.mall.controller;
 
+import cn.hutool.core.collection.CollUtil;
+import com.power.mall.common.api.CommonPage;
 import com.power.mall.common.api.CommonResult;
 import com.power.mall.dto.UserLoginDTO;
 import com.power.mall.dto.UserRegisterDTO;
 import com.power.mall.model.UmsAdmin;
+import com.power.mall.model.UmsRole;
 import com.power.mall.service.UmsAdminService;
+import com.power.mall.service.UmsRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +18,7 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Name 后台用户管理
@@ -26,8 +31,8 @@ public class UmsAdminController {
 
     @Autowired
     private UmsAdminService userAdminService;
-
-
+    @Autowired
+    private UmsRoleService roleService;
 
     @PostMapping("/register")
     //@Validated 验证参数 NotEmpty?
@@ -52,9 +57,17 @@ public class UmsAdminController {
         return CommonResult.success(result);
     }
     @GetMapping("/list")
-    public CommonResult list(){
-        List<UmsAdmin> list =userAdminService.list();
-        return CommonResult.success(list);
+    public CommonResult list(@RequestParam(value = "keyword",required = false)String keyword,
+                             @RequestParam(value = "pageSize",defaultValue = "5")Integer pageSize,
+                             @RequestParam(value = "pageNum",defaultValue = "1")Integer pageNum
+                             ){
+        List<UmsAdmin> list =userAdminService.list(keyword,pageSize,pageNum);
+        return CommonResult.success(CommonPage.restPage(list));
+    }
+    @GetMapping("/role/{adminId}")
+    public CommonResult<List<UmsRole>> getRoleList(@PathVariable Long adminId){
+        List<UmsRole> roleList =userAdminService.getRoleList(adminId);
+        return CommonResult.success(roleList);
     }
     @GetMapping("info")
     public CommonResult info(Principal principal){
@@ -65,9 +78,13 @@ public class UmsAdminController {
         UmsAdmin umsAdmin = userAdminService.getAdminByUsername(username);
         Map<String,Object> data = new HashMap<>();
         data.put("username",umsAdmin.getUsername());
-        data.put("menu",null);
+        data.put("menus",roleService.getMenuList(umsAdmin.getId()));
         data.put("icon",umsAdmin.getIcon());
-        data.put("roles",null);
+        List<UmsRole> roleList = roleService.getRoleList(umsAdmin.getId());
+        if (CollUtil.isNotEmpty(roleList)){
+            List<String> roles = roleList.stream().map(UmsRole::getName).collect(Collectors.toList());
+            data.put("roles",roles);
+        }
         return CommonResult.success(data);
     }
 

@@ -1,15 +1,9 @@
 package com.power.mall.model;
 
 import io.swagger.annotations.ApiModelProperty;
-
 import java.io.Serializable;
 import java.util.Date;
 
-/**
- * @Name 未命名
- * @Author SCH
- * @Date 2024/9/11 2:24
- */
 public class UmsResource implements Serializable {
     private Long id;
 

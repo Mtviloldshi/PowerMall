@@ -1,18 +1,21 @@
 package com.power.mall.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import com.github.pagehelper.PageHelper;
 import com.power.mall.bo.AdminUserDetails;
 import com.power.mall.common.exception.Asserts;
 import com.power.mall.dto.UserLoginDTO;
 import com.power.mall.dto.UserRegisterDTO;
+import com.power.mall.mapper.UmsAdminMapper;
+import com.power.mall.mapper.UmsAdminRoleRelationMapper;
+import com.power.mall.mapper.UmsRoleMapper;
 import com.power.mall.mapper.UserAdminMapper;
-import com.power.mall.model.UmsAdmin;
-import com.power.mall.model.UmsResource;
+import com.power.mall.model.*;
 import com.power.mall.service.UmsAdminCacheService;
 import com.power.mall.service.UmsAdminService;
 import com.power.mall.security.util.JwtTokenUtil;
-import com.power.mall.model.UmsExample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +29,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Name 未命名
@@ -37,13 +42,17 @@ import java.util.List;
 public class UmsAdminImpl implements UmsAdminService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UmsAdminImpl.class);
     @Autowired
-    private UserAdminMapper userAdminMapper;
+    private UmsAdminMapper userAdminMapper;
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private UmsAdminCacheService umsAdminCacheService;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UmsRoleMapper roleMapper;
+    @Autowired
+    private UmsAdminRoleRelationMapper roleRelationMapper;
 
     @Override
     public Boolean register(UserRegisterDTO dto) {
@@ -84,9 +93,15 @@ public class UmsAdminImpl implements UmsAdminService {
     }
 
     @Override
-    public List<UmsAdmin> list() {
-        List<UmsAdmin> list = userAdminMapper.list();
-        return list;
+    public List<UmsAdmin> list(String keyword,Integer pageSize,Integer pageNum) {
+        PageHelper.startPage(pageNum,pageSize);
+        UmsAdminExample example = new UmsAdminExample();
+        UmsAdminExample.Criteria criteria = example.createCriteria();
+        if (!StrUtil.isEmpty(keyword)){
+            criteria.andUsernameLike("%" + keyword + "%");
+            example.or(example.createCriteria().andNickNameLike("%" + keyword + "%"));
+        }
+        return userAdminMapper.selectByExample(example);
     }
 
     @Override
@@ -117,7 +132,7 @@ public class UmsAdminImpl implements UmsAdminService {
             return admin;
         }
         //从数据库中查找，并存入或更新redis
-        UmsExample umsExample = new UmsExample();
+        UmsAdminExample umsExample = new UmsAdminExample();
         umsExample.createCriteria().andUsernameEqualTo(username);
         List<UmsAdmin> adminList = userAdminMapper.selectByExample(umsExample);
         if (adminList != null && adminList.size() > 0){
@@ -126,6 +141,18 @@ public class UmsAdminImpl implements UmsAdminService {
             return admin;
         }
         return null;
+    }
+
+    @Override
+    public List<UmsRole> getRoleList(Long adminId) {
+        UmsAdminRoleRelationExample example = new UmsAdminRoleRelationExample();
+        example.createCriteria().andAdminIdEqualTo(adminId);
+        List<UmsAdminRoleRelation> umsAdminRoleRelations = roleRelationMapper.selectByExample(example);
+        List<Long> roleIdList = umsAdminRoleRelations.stream().map(a -> a.getRoleId()).collect(Collectors.toList());
+        UmsRoleExample roleExample =new UmsRoleExample();
+        roleExample.createCriteria().andIdIn(roleIdList);
+        List<UmsRole> umsRoles = roleMapper.selectByExample(roleExample);
+        return umsRoles;
     }
 
 //

@@ -14,7 +14,7 @@ import java.io.IOException;
  * Created by macro on 2019/4/8.
  */
 @Configuration
-@MapperScan({"com.power.mall.mapper"})
+@MapperScan({"com.power.mall.mapper","com.power.mall.dao"})
 public class MyBatisConfig {
 
 }
