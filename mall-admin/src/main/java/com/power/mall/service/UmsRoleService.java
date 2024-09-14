@@ -11,4 +11,8 @@ public interface UmsRoleService {
     List<UmsRole> getRoleList(Long adminId);
 
     List<UmsRole> listAll();
+
+    List<UmsRole> list(String keyword, Integer pageSize, Integer pageNum);
+
+
 }
