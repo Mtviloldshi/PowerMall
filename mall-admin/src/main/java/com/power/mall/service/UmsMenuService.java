@@ -9,4 +9,6 @@ import java.util.List;
 public interface UmsMenuService {
 
     List<UmsMenuTreeListDTO> treeList();
+
+    List<UmsMenu> list(String keyword, Integer pageSize, Integer pageNum,Long parentId);
 }

@@ -1,8 +1,12 @@
 package com.power.mall.service.impl;
 
+import cn.hutool.core.util.StrUtil;
+import com.github.pagehelper.PageHelper;
 import com.power.mall.common.api.CommonResult;
+import com.power.mall.dao.UmsRoleDao;
 import com.power.mall.dto.UmsMenuTreeListDTO;
 import com.power.mall.mapper.UmsMenuMapper;
+import com.power.mall.model.UmsAdminExample;
 import com.power.mall.model.UmsMenu;
 import com.power.mall.model.UmsMenuExample;
 import com.power.mall.service.UmsMenuService;
@@ -11,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,4 +53,21 @@ public class UmsMenuServiceImpl implements UmsMenuService {
         }
         return list;
     }
+    @Autowired
+    private UmsRoleDao roleDao;
+
+    @Override
+    public List<UmsMenu> list(String keyword, Integer pageSize, Integer pageNum, Long parentId) {
+        PageHelper.startPage(pageNum,pageSize);
+        UmsMenuExample example = new UmsMenuExample();
+        UmsMenuExample.Criteria criteria = example.createCriteria();
+        criteria.andParentIdEqualTo(parentId);
+        if (!StrUtil.isEmpty(keyword)){
+            criteria.andTitleLike("%"+keyword+"%");
+            example.or(example.createCriteria().andNameLike("%"+keyword+"%"));
+        }
+        return umsMenuMapper.selectByExample(example);
+    }
+
+
 }

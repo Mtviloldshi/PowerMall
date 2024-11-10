@@ -1,14 +1,18 @@
 package com.power.mall.model;
 
 import io.swagger.annotations.ApiModelProperty;
+
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Date;
 
 public class UmsAdmin implements Serializable {
     private Long id;
 
+    @NotBlank(message = "用户名不能为空")
     private String username;
 
+    @NotBlank(message = "密码不能为空")
     private String password;
 
     @ApiModelProperty(value = "头像")

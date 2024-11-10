@@ -15,7 +15,7 @@ import java.util.List;
  */
 
 public interface UmsAdminService {
-    public Boolean register(UserRegisterDTO userRegisterDTO);
+    public UmsAdmin register(UserRegisterDTO userRegisterDTO);
 
     String login(UserLoginDTO loginDTO);
 
@@ -26,8 +26,16 @@ public interface UmsAdminService {
     UmsAdmin getAdminByUsername(String username);
 
     List<UmsRole> getRoleList(Long adminId);
+
+    int updateRoles(Long adminId, List<Long> roleIds);
+
+    int update(Long id, UmsAdmin umsAdmin);
     /**
      * 获取缓存服务
      */
-//    UmsAdminCacheService getCacheService();
+    UmsAdminCacheService getCacheService();
+
+    int delete(Long id);
+
+    int updateStatus(Long id, int status);
 }

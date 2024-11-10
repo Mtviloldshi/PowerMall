@@ -22,4 +22,11 @@ public interface UmsAdminCacheService {
     void setAdmin(UmsAdmin umsAdmin);
 
     List<UmsResource> getResourceList(Long adminId);
+
+    /**
+     * 删除后台用户缓存
+     */
+    void delAdmin(Long adminId);
+
+    void delResourceList(Long id);
 }

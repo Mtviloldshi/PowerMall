@@ -21,12 +21,12 @@ import java.util.List;
 public class UmsRoleController {
     @Autowired
     private UmsRoleService roleService;
-    @Autowired
-    private UmsAdminService adminService;
+
     @GetMapping("/listAll")
     public CommonResult listAll(){
         return CommonResult.success(roleService.listAll());
     }
+
     @GetMapping("/list")
     public CommonResult list(@RequestParam(value = "keyword",required = false) String keyword,
                              @RequestParam(value = "pageSize",defaultValue = "5")Integer pageSize,
@@ -39,4 +39,5 @@ public class UmsRoleController {
     public CommonResult listMenu(@PathVariable Long id){
         return CommonResult.success(roleService.getMenuList(id));
     }
+
 }

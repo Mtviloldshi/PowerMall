@@ -9,15 +9,19 @@ import com.power.mall.model.UmsAdmin;
 import com.power.mall.model.UmsRole;
 import com.power.mall.service.UmsAdminService;
 import com.power.mall.service.UmsRoleService;
+import org.simpleframework.xml.Path;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.swing.plaf.SpinnerUI;
+import javax.validation.constraints.NotNull;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -34,11 +38,18 @@ public class UmsAdminController {
     @Autowired
     private UmsRoleService roleService;
 
+    /**
+     * 需要发现编程中的乐趣
+     * @param registerDTO
+     * @return
+     */
     @PostMapping("/register")
     //@Validated 验证参数 NotEmpty?
-    public CommonResult<Boolean> register(@RequestBody UserRegisterDTO registerDTO){
-        Boolean register = userAdminService.register(registerDTO);
-        System.out.println(register);
+    public CommonResult<UmsAdmin> register(@RequestBody UserRegisterDTO registerDTO){
+        UmsAdmin register = userAdminService.register(registerDTO);
+        if (register == null){
+            return CommonResult.failed("注册失败");
+        }
         return CommonResult.success(register);
     }
 
@@ -64,11 +75,6 @@ public class UmsAdminController {
         List<UmsAdmin> list =userAdminService.list(keyword,pageSize,pageNum);
         return CommonResult.success(CommonPage.restPage(list));
     }
-    @GetMapping("/role/{adminId}")
-    public CommonResult<List<UmsRole>> getRoleList(@PathVariable Long adminId){
-        List<UmsRole> roleList =userAdminService.getRoleList(adminId);
-        return CommonResult.success(roleList);
-    }
     @GetMapping("info")
     public CommonResult info(Principal principal){
         if (principal == null){
@@ -86,6 +92,60 @@ public class UmsAdminController {
             data.put("roles",roles);
         }
         return CommonResult.success(data);
+    }
+    @GetMapping("/role/{adminId}")
+    public CommonResult<List<UmsRole>> getRoleList(@PathVariable Long adminId){
+        List<UmsRole> roleList =userAdminService.getRoleList(adminId);
+        return CommonResult.success(roleList);
+    }
+    @PostMapping("/role/update")
+    public CommonResult updateRoles(@RequestParam Long adminId, @RequestParam List<Long> roleIds){
+
+        int count = userAdminService.updateRoles(adminId,roleIds);
+        if (count >=0){
+           return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
+
+    /**
+     * 再这个接口中要注意的是，更新密码，和删除缓存用户
+     * @param id
+     * @param umsAdmin
+     * @return
+     */
+    @PostMapping("/update/{id}")
+    public CommonResult update(@PathVariable Long id, @RequestBody @Validated UmsAdmin umsAdmin){
+        long startTime = System.nanoTime();
+        int count = userAdminService.update(id,umsAdmin);
+        long endTime = System.nanoTime();
+        long duration = endTime- startTime;
+        System.out.println("AdminUpdate转换为毫秒：" + TimeUnit.NANOSECONDS.toMillis(duration) + " 毫秒");
+        if (count >=0){
+           return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
+    @PostMapping("/delete/{id}")
+    public CommonResult delete(@PathVariable Long id){
+        int count = userAdminService.delete(id);
+        if (count >=0){
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
+    @PostMapping("/updateStatus/{id}")
+    public CommonResult updateStatus(@PathVariable Long id,@RequestParam int status){
+        int count = userAdminService.updateStatus(id,status);
+        if (count >=0){
+            return CommonResult.success(count);
+        }
+        //TODO 上午完成编辑，修复了原商城，禁用账户无法立即生效的bug
+        return CommonResult.failed();
+    }
+    @PostMapping("/logout")
+    public CommonResult logout(){
+        return CommonResult.success(null);
     }
 
 }
