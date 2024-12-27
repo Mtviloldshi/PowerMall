@@ -30,4 +30,8 @@ public class UmsResourceController {
         return CommonResult.success(CommonPage.restPage(list));
     }
 
+    @GetMapping("/listAll")
+    public CommonResult listAll(){
+        return CommonResult.success(resourceService.listAll());
+    }
 }

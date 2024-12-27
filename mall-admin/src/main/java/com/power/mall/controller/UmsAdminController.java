@@ -140,7 +140,6 @@ public class UmsAdminController {
         if (count >=0){
             return CommonResult.success(count);
         }
-        //TODO 上午完成编辑，修复了原商城，禁用账户无法立即生效的bug
         return CommonResult.failed();
     }
     @PostMapping("/logout")

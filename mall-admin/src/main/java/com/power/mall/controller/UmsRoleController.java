@@ -3,19 +3,12 @@ package com.power.mall.controller;
 import com.power.mall.common.api.CommonPage;
 import com.power.mall.common.api.CommonResult;
 import com.power.mall.model.UmsRole;
-import com.power.mall.service.UmsAdminService;
 import com.power.mall.service.UmsRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * @Name 未命名
- * @Author SCH
- * @Date 2024/9/13 18:07
- */
 @RestController
 @RequestMapping("/role")
 public class UmsRoleController {
@@ -38,6 +31,17 @@ public class UmsRoleController {
     @GetMapping("/listMenu/{id}")
     public CommonResult listMenu(@PathVariable Long id){
         return CommonResult.success(roleService.getMenuList(id));
+    }
+
+    /**
+     * 获取后台用户所关联的资源
+     * @param id
+     * @return
+     * Todo 写到分配资源了
+     */
+    @GetMapping("/listResource/{id}")
+    public CommonResult listResource(@PathVariable Long id){
+        return CommonResult.success(roleService.getListResource(id));
     }
 
 }
